@@ -1,18 +1,21 @@
-import streamlit as st
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-params = st.query_params
-chave = params.get("chave_md5")
+app = FastAPI()
 
-if chave:
-    resposta = {
+MD5_VALIDO = "e10adc3949ba59abbe56e057f20f883e"  # md5("123456")
+
+class Payload(BaseModel):
+    chave_md5: str
+    dado: str | None = None
+
+@app.post("/api/receber")
+def receber(payload: Payload):
+    if payload.chave_md5 != MD5_VALIDO:
+        raise HTTPException(status_code=401, detail="MD5 inválido")
+
+    return {
         "status": "ok",
-        "chave_md5": chave,
-        "mensagem": "Parâmetro recebido com sucesso"
+        "mensagem": "POST recebido com sucesso",
+        "dado": payload.dado
     }
-else:
-    resposta = {
-        "status": "erro",
-        "mensagem": "Parâmetro chave_md5 não informado"
-    }
-
-st.json(resposta)
